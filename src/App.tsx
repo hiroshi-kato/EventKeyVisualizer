@@ -6,6 +6,8 @@ import { VirtualKeyboard } from '@/components/VirtualKeyboard';
 import { EventProperties } from '@/components/EventProperties';
 import { PropagationDemo } from '@/components/PropagationDemo';
 import { ShortcutDetector } from '@/components/ShortcutDetector';
+import { ShortcutBestPractices } from '@/components/ShortcutBestPractices';
+import { ShortcutPractice } from '@/components/ShortcutPractice';
 
 function App() {
   const {
@@ -14,8 +16,10 @@ function App() {
     timeline,
     pressedKeys,
     modifiers,
+    currentPlatform,
     clearHistory,
     getShortcutString,
+    checkShortcutValidity,
   } = useKeyboardEvent();
 
   return (
@@ -41,9 +45,21 @@ function App() {
 
         {/* Row 2: ShortcutDetector + EventProperties */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ShortcutDetector pressedKeys={pressedKeys} modifiers={modifiers} />
+          <ShortcutDetector
+            pressedKeys={pressedKeys}
+            modifiers={modifiers}
+            currentPlatform={currentPlatform}
+            currentEvent={currentEvent}
+            checkValidity={checkShortcutValidity}
+          />
           <EventProperties currentEvent={currentEvent} />
         </div>
+
+        {/* Row 2.5: ShortcutBestPractices (full width) */}
+        <ShortcutBestPractices currentPlatform={currentPlatform} />
+
+        {/* Row 2.6: ShortcutPractice (full width) */}
+        <ShortcutPractice currentPlatform={currentPlatform} />
 
         {/* Row 3: EventTypeTimeline (full width) */}
         <EventTypeTimeline timeline={timeline} />

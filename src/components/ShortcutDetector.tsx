@@ -1,13 +1,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { COMMON_SHORTCUTS, type ModifierState } from '@/types/keyboard';
+import { COMMON_SHORTCUTS, type ModifierState, type KeyboardEventState, type ShortcutCheckResult } from '@/types/keyboard';
+import { getPlatformName, getModKeyName, type Platform } from '@/utils/platform';
 
 interface ShortcutDetectorProps {
   pressedKeys: Set<string>;
   modifiers: ModifierState;
+  currentPlatform: Platform;
+  currentEvent: KeyboardEventState | null;
+  checkValidity: (event: KeyboardEventState | null) => ShortcutCheckResult;
 }
 
-export function ShortcutDetector({ pressedKeys, modifiers }: ShortcutDetectorProps) {
+export function ShortcutDetector({
+  pressedKeys,
+  modifiers,
+  currentPlatform,
+  currentEvent,
+  checkValidity
+}: ShortcutDetectorProps) {
+  const validityResult = checkValidity(currentEvent);
+  const platformName = getPlatformName(currentPlatform);
+  const modKeyName = getModKeyName(currentPlatform);
   // Get current key combination
   const getCurrentKeyCodes = (): string[] => {
     const keys: string[] = [];
@@ -68,6 +81,18 @@ export function ShortcutDetector({ pressedKeys, modifiers }: ShortcutDetectorPro
         <p className="text-sm text-muted-foreground">現在のキー組み合わせを検出し、ショートカットを識別します</p>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Platform info */}
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Platform:</span>
+            <Badge variant="outline">{platformName}</Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">MOD Key:</span>
+            <Badge variant="secondary">{modKeyName}</Badge>
+          </div>
+        </div>
+
         {/* Current keys */}
         <div>
           <p className="text-sm text-muted-foreground mb-2">Current combination:</p>
@@ -96,6 +121,41 @@ export function ShortcutDetector({ pressedKeys, modifiers }: ShortcutDetectorPro
             <p className="text-xs text-muted-foreground">
               {detectedShortcut.description}
             </p>
+          </div>
+        )}
+
+        {/* Validity warnings */}
+        {validityResult.reasons.length > 0 && (
+          <div className="space-y-2">
+            {validityResult.reasons.map((reason, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-md border border-yellow-300 dark:border-yellow-700"
+              >
+                <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                <div>
+                  <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    {reason.type}: true
+                  </span>
+                  <span className="text-xs text-yellow-700 dark:text-yellow-300 ml-2">
+                    - {reason.message}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Status */}
+        {currentKeys.length > 0 && (
+          <div className={`p-2 rounded-md ${validityResult.isValid ? 'bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-700' : 'bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700'}`}>
+            <span className="text-sm font-medium">
+              Status: {validityResult.isValid ? (
+                <span className="text-green-700 dark:text-green-300">有効 - ショートカットが発火します</span>
+              ) : (
+                <span className="text-red-700 dark:text-red-300">無効 - ショートカットは発火しません</span>
+              )}
+            </span>
           </div>
         )}
 

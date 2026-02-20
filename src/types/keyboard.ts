@@ -49,6 +49,23 @@ export interface ShortcutDefinition {
   description: string;
 }
 
+export interface ShortcutCheckResult {
+  isValid: boolean;
+  reasons: InvalidReason[];
+}
+
+export interface InvalidReason {
+  type: 'isComposing' | 'repeat';
+  message: string;
+}
+
+export interface CodeSnippet {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+}
+
 export const COMMON_SHORTCUTS: ShortcutDefinition[] = [
   { keys: ['Control', 's'], name: 'Save', description: '保存' },
   { keys: ['Control', 'c'], name: 'Copy', description: 'コピー' },

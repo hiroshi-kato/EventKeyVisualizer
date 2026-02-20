@@ -3,8 +3,11 @@ import type {
   KeyboardEventState,
   KeyEventHistory,
   TimelineEvent,
-  ModifierState
+  ModifierState,
+  ShortcutCheckResult,
+  InvalidReason
 } from '@/types/keyboard';
+import { detectPlatform, type Platform } from '@/utils/platform';
 
 const MAX_HISTORY = 20;
 const MAX_TIMELINE = 50;
@@ -20,6 +23,7 @@ export function useKeyboardEvent() {
     altKey: false,
     metaKey: false,
   });
+  const [currentPlatform] = useState<Platform>(() => detectPlatform());
 
   const historyIdRef = useRef(0);
   const timelineIdRef = useRef(0);
@@ -128,13 +132,38 @@ export function useKeyboardEvent() {
     return parts.length > 0 ? parts.join(' + ') : '';
   }, [modifiers, pressedKeys]);
 
+  const checkShortcutValidity = useCallback((event: KeyboardEventState | null): ShortcutCheckResult => {
+    const reasons: InvalidReason[] = [];
+
+    if (event?.isComposing) {
+      reasons.push({
+        type: 'isComposing',
+        message: 'IME入力中はショートカットが無効です',
+      });
+    }
+
+    if (event?.repeat) {
+      reasons.push({
+        type: 'repeat',
+        message: 'キー長押し中はショートカットが無効です',
+      });
+    }
+
+    return {
+      isValid: reasons.length === 0,
+      reasons,
+    };
+  }, []);
+
   return {
     currentEvent,
     history,
     timeline,
     pressedKeys,
     modifiers,
+    currentPlatform,
     clearHistory,
     getShortcutString,
+    checkShortcutValidity,
   };
 }
