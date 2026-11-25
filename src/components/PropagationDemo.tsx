@@ -4,9 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import type { PropagationLog } from '@/types/keyboard';
 
-interface PropagationDemoProps {}
-
-export function PropagationDemo({}: PropagationDemoProps) {
+export function PropagationDemo() {
   const [logs, setLogs] = useState<PropagationLog[]>([]);
   const [stopPropagation, setStopPropagation] = useState({
     child: false,
