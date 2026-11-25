@@ -42,7 +42,11 @@ function App() {
             modifiers={modifiers}
             shortcutString={getShortcutString()}
           />
-          <VirtualKeyboard pressedKeys={pressedKeys} modifiers={modifiers} />
+          <VirtualKeyboard
+            pressedKeys={pressedKeys}
+            modifiers={modifiers}
+            currentPlatform={currentPlatform}
+          />
         </div>
 
         {/* Row 2: ShortcutDetector + EventProperties */}

@@ -100,6 +100,7 @@ export const KEYBOARD_LAYOUT: KeyboardRow[] = [
   {
     keys: [
       { code: 'ControlLeft', label: 'Ctrl', width: 1.25, type: 'modifier' },
+      // Meta キーの刻印は OS で異なるので、表示では VirtualKeyboard がラベルを差し替える
       { code: 'MetaLeft', label: 'Win', width: 1.25, type: 'modifier' },
       { code: 'AltLeft', label: 'Alt', width: 1.25, type: 'modifier' },
       { code: 'Space', label: 'Space', width: 6.25 },

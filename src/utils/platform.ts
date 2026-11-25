@@ -51,6 +51,17 @@ export function getModKeyName(platform: Platform): string {
   }
 }
 
+export function getMetaKeyLabel(platform: Platform): string {
+  switch (platform) {
+    case 'mac':
+      return '⌘';
+    case 'windows':
+    case 'linux':
+    default:
+      return 'Win';
+  }
+}
+
 export function isModKeyPressed(
   event: { metaKey: boolean; ctrlKey: boolean },
   platform: Platform

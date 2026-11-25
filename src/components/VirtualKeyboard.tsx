@@ -1,14 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { KEYBOARD_LAYOUT } from './keyboard-layout';
 import type { ModifierState } from '@/types/keyboard';
+import { getMetaKeyLabel, type Platform } from '@/utils/platform';
 
 interface VirtualKeyboardProps {
   pressedKeys: Set<string>;
   modifiers: ModifierState;
+  currentPlatform: Platform;
 }
 
-export function VirtualKeyboard({ pressedKeys, modifiers }: VirtualKeyboardProps) {
+export function VirtualKeyboard({ pressedKeys, modifiers, currentPlatform }: VirtualKeyboardProps) {
   const isKeyPressed = (code: string) => pressedKeys.has(code);
+  // Meta キーの刻印は OS で異なる (macOS: ⌘、それ以外: Win)
+  const metaKeyLabel = getMetaKeyLabel(currentPlatform);
 
   const isModifierActive = (code: string) => {
     switch (code) {
@@ -41,6 +45,7 @@ export function VirtualKeyboard({ pressedKeys, modifiers }: VirtualKeyboardProps
             <div key={rowIndex} className="flex gap-0.5 justify-center">
               {row.keys.map((key) => {
                 const pressed = isKeyPressed(key.code) || isModifierActive(key.code);
+                const label = key.code === 'MetaLeft' || key.code === 'MetaRight' ? metaKeyLabel : key.label;
                 return (
                   <div
                     key={key.code}
@@ -59,9 +64,9 @@ export function VirtualKeyboard({ pressedKeys, modifiers }: VirtualKeyboardProps
                       height: '28px',
                       minWidth: '20px',
                     }}
-                    title={`${key.label} (${key.code})`}
+                    title={`${label} (${key.code})`}
                   >
-                    <span className="truncate px-1">{key.label}</span>
+                    <span className="truncate px-1">{label}</span>
                   </div>
                 );
               })}
