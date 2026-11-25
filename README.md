@@ -77,3 +77,15 @@ keydown から keyup までの「押している区間」をタイムライン�
 npm install
 npm run dev
 ```
+
+## 動作確認
+
+ブラウザでの動作確認は Playwright の e2e テストで行います。`tests/e2e/` に各セクションの表示とキー入力に対する動作を確認するテストがあります。
+
+```bash
+npm run test:e2e:install   # 初回のみ: e2e テストで使う Chromium を取得
+npm run test:e2e           # ヘッドレスで実行 (Vite の開発サーバーは自動で起動)
+```
+
+ポート 5175 が使用中だとテスト用のサーバーを起動できないので、先にそのプロセスを止してください。
+コードを変更したら `npm run lint`、`npm run build`、`npm run test:e2e` を通してください。
