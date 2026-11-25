@@ -28,4 +28,11 @@ export default defineConfig([
       'react-refresh/only-export-components': 'off',
     },
   },
+  {
+    // Playwright の fixture は第2引数を use と呼ぶので、React Hooks の規則の対象にしない
+    files: ['playwright.config.ts', 'tests/**/*.{ts,tsx}'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
 ])
