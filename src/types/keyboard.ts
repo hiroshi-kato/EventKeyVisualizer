@@ -66,6 +66,16 @@ export interface CodeSnippet {
   code: string;
 }
 
+// One physical key press (keydown -> keyup)
+export interface KeyPressSegment {
+  id: number;
+  keydown: KeyboardEventState; // keydown event that started the press
+  upTime: number | null; // timeStamp of keyup (null while the key is held down)
+  keyupLost: boolean; // keyup was never observed (e.g. the window lost focus)
+  repeatTimes: number[]; // timeStamps of repeated keydown events
+  keypressTimes: number[]; // timeStamps of keypress events
+}
+
 export const COMMON_SHORTCUTS: ShortcutDefinition[] = [
   { keys: ['Control', 's'], name: 'Save', description: '保存' },
   { keys: ['Control', 'c'], name: 'Copy', description: 'コピー' },
@@ -90,4 +100,16 @@ export const COMMON_SHORTCUTS: ShortcutDefinition[] = [
   { keys: ['ArrowDown'], name: 'Arrow Down', description: '下矢印' },
   { keys: ['ArrowLeft'], name: 'Arrow Left', description: '左矢印' },
   { keys: ['ArrowRight'], name: 'Arrow Right', description: '右矢印' },
+];
+
+// Physical key codes of modifier keys (left and right)
+export const MODIFIER_KEY_CODES: string[] = [
+  'MetaLeft',
+  'MetaRight',
+  'ControlLeft',
+  'ControlRight',
+  'AltLeft',
+  'AltRight',
+  'ShiftLeft',
+  'ShiftRight',
 ];

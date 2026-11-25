@@ -1,6 +1,7 @@
 import { useKeyboardEvent } from '@/hooks/useKeyboardEvent';
 import { KeyDisplay } from '@/components/KeyDisplay';
 import { EventTypeTimeline } from '@/components/EventTypeTimeline';
+import { KeyPressTimeline } from '@/components/KeyPressTimeline';
 import { KeyHistory } from '@/components/KeyHistory';
 import { VirtualKeyboard } from '@/components/VirtualKeyboard';
 import { EventProperties } from '@/components/EventProperties';
@@ -14,6 +15,7 @@ function App() {
     currentEvent,
     history,
     timeline,
+    pressSegments,
     pressedKeys,
     modifiers,
     currentPlatform,
@@ -63,6 +65,9 @@ function App() {
 
         {/* Row 3: EventTypeTimeline (full width) */}
         <EventTypeTimeline timeline={timeline} />
+
+        {/* Row 3.5: KeyPressTimeline (full width) */}
+        <KeyPressTimeline segments={pressSegments} onClear={clearHistory} />
 
         {/* Row 4: KeyHistory + PropagationDemo */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
