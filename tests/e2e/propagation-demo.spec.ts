@@ -1,5 +1,5 @@
 import { type Locator, type Page } from '@playwright/test';
-import { test, expect, openApp, section } from './fixtures';
+import { test, expect, openApp, section, trackConsoleErrors } from './fixtures';
 
 // ログの1行は「フェーズ」「要素」(+ stopped / prevented) のバッジでできている
 type Row = [phase: string, element: string, ...flags: string[]];
@@ -19,6 +19,21 @@ const CAPTURED: Row[] = [
   ['bubble', 'parent'],
   ['bubble', 'grandparent'],
 ];
+// Parent で Stop Propagation が有効なときの keydown / keyup 1回分のログ
+const STOPPED_AT_PARENT: Row[] = [
+  ['target', 'child'],
+  ['bubble', 'parent', 'stopped'],
+];
+// Child で Prevent Default が有効なときの keydown / keyup 1回分のログ
+const PREVENTED_AT_CHILD: Row[] = [
+  ['target', 'child', 'prevented'],
+  ['bubble', 'parent'],
+  ['bubble', 'grandparent'],
+];
+
+// 同じ内容の行を count 回繰り返した、バッジの並び
+const repeatRows = (rows: Row[], count: number): string[] =>
+  Array.from({ length: count }, () => rows).flat(2);
 
 function demo(page: Page): Locator {
   return section(page, 'Event Propagation Demo');
@@ -41,23 +56,28 @@ async function focusChild(page: Page): Promise<void> {
   await demo(page).getByRole('button', { name: 'Focus Child' }).click();
 }
 
+// 3つの要素すべての Capture を有効にして、Child にフォーカスを戻す
+async function enableCaptureEverywhere(page: Page): Promise<void> {
+  for (const element of ['Grandparent', 'Parent', 'Child'] as const) {
+    await toggle(page, element, 1).click();
+  }
+  await focusChild(page);
+}
+
 test('Child で押したキーが child → parent → grandparent へ伝播する', async ({ page }) => {
   await openApp(page);
   await focusChild(page);
   await page.keyboard.press('a');
 
-  await expect(badges(page)).toHaveText([...PLAIN, ...PLAIN].flat());
+  await expect(badges(page)).toHaveText(repeatRows(PLAIN, 2));
 });
 
 test('Capture を有効にした要素は capture フェーズも記録する', async ({ page }) => {
   await openApp(page);
-  for (const element of ['Grandparent', 'Parent', 'Child'] as const) {
-    await toggle(page, element, 1).click();
-  }
-  await focusChild(page);
+  await enableCaptureEverywhere(page);
   await page.keyboard.press('a');
 
-  await expect(badges(page)).toHaveText([...CAPTURED, ...CAPTURED].flat());
+  await expect(badges(page)).toHaveText(repeatRows(CAPTURED, 2));
 });
 
 test('Stop Propagation を有効にした要素より外へは伝播しない', async ({ page }) => {
@@ -66,14 +86,7 @@ test('Stop Propagation を有効にした要素より外へは伝播しない', 
   await focusChild(page);
   await page.keyboard.press('a');
 
-  await expect(badges(page)).toHaveText(
-    [
-      ['target', 'child'],
-      ['bubble', 'parent', 'stopped'],
-      ['target', 'child'],
-      ['bubble', 'parent', 'stopped'],
-    ].flat()
-  );
+  await expect(badges(page)).toHaveText(repeatRows(STOPPED_AT_PARENT, 2));
 });
 
 test('Prevent Default を有効にした要素には prevented が付く', async ({ page }) => {
@@ -82,16 +95,7 @@ test('Prevent Default を有効にした要素には prevented が付く', async
   await focusChild(page);
   await page.keyboard.press('a');
 
-  await expect(badges(page)).toHaveText(
-    [
-      ['target', 'child', 'prevented'],
-      ['bubble', 'parent'],
-      ['bubble', 'grandparent'],
-      ['target', 'child', 'prevented'],
-      ['bubble', 'parent'],
-      ['bubble', 'grandparent'],
-    ].flat()
-  );
+  await expect(badges(page)).toHaveText(repeatRows(PREVENTED_AT_CHILD, 2));
 });
 
 test('Clear Logs でログを消せる', async ({ page }) => {
@@ -102,4 +106,40 @@ test('Clear Logs でログを消せる', async ({ page }) => {
 
   await demo(page).getByRole('button', { name: 'Clear Logs' }).click();
   await expect(demo(page)).toContainText('Click on Child to focus, then press any key');
+});
+
+test('ログを記録してもコンソールエラーが出ない', async ({ page }) => {
+  const errors = trackConsoleErrors(page);
+  await openApp(page);
+  await focusChild(page);
+  await page.keyboard.press('a');
+  await expect(badges(page)).toHaveText(repeatRows(PLAIN, 2));
+  await page.keyboard.press('b');
+  await expect(badges(page)).toHaveText(repeatRows(PLAIN, 4));
+
+  expect(errors).toEqual([]);
+});
+
+test('ログは最新の15件を表示する', async ({ page }) => {
+  await openApp(page);
+  await focusChild(page);
+  // 1回押すごとに 6 件記録されるので、この時点で表示は 15 件でいっぱいになる
+  for (let press = 0; press < 5; press++) {
+    await page.keyboard.press('a');
+  }
+  await enableCaptureEverywhere(page);
+  await page.keyboard.press('a');
+
+  // 古い 4 回分は切り捨てられ、直前の keyup と最新の押下 (capture あり) が残る
+  await expect(badges(page)).toHaveText([...PLAIN, ...CAPTURED, ...CAPTURED].flat());
+});
+
+test('押し続けてもログの行が重複したり欠けたりしない', async ({ page }) => {
+  await openApp(page);
+  await focusChild(page);
+  for (let press = 0; press < 13; press++) {
+    await page.keyboard.press('a');
+  }
+
+  await expect(badges(page)).toHaveText(repeatRows(PLAIN, 5));
 });
