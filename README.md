@@ -89,3 +89,20 @@ npm run test:e2e           # ヘッドレスで実行 (Vite の開発サーバ�
 
 ポート 5175 が使用中だとテスト用のサーバーを起動できないので、先にそのプロセスを止してください。
 コードを変更したら `npm run lint`、`npm run build`、`npm run test:e2e` を通してください。
+
+### 開発中の画面確認
+
+開発中に画面を確かめるときは Playwright CLI が使えます。合否の判定は上の `npm run test:e2e` で行います。
+`npm run dev` で開発サーバーを起動してから、別のターミナルで:
+
+```bash
+npx playwright-cli open http://localhost:5173
+npx playwright-cli press Enter
+npx playwright-cli console           # コンソールのメッセージ
+npx playwright-cli requests --static # ネットワークのリクエスト一覧
+npx playwright-cli close
+```
+
+同梱の Chromium をダウンロードできない環境 (サンドボックス) では、入っている Chromium のパスを `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` に設定します。
+Playwright CLI には同じ値を `PLAYWRIGHT_MCP_EXECUTABLE_PATH` にも設定します。
+使い分けやコマンドの詳細は `AGENTS.md` を参照してください。
