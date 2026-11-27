@@ -4,9 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import type { PropagationLog } from '@/types/keyboard';
 
-interface PropagationDemoProps {}
-
-export function PropagationDemo({}: PropagationDemoProps) {
+export function PropagationDemo() {
   const [logs, setLogs] = useState<PropagationLog[]>([]);
   const [stopPropagation, setStopPropagation] = useState({
     child: false,
@@ -35,10 +33,13 @@ export function PropagationDemo({}: PropagationDemoProps) {
     prevented: boolean
   ) => {
     logIdRef.current += 1;
+    // 更新関数は描画のときにまとめて呼ばれる。その中で ref を読むと、
+    // 同じイベントで記録した行がすべて同じ id になってしまうので、ここで値を確定させる
+    const logId = logIdRef.current;
     // 時系列順に表示（古いものが上、新しいものが下）
     setLogs(prev => [
       ...prev.slice(-49),
-      { id: logIdRef.current, phase, element, eventName, stopped, prevented },
+      { id: logId, phase, element, eventName, stopped, prevented },
     ]);
   }, []);
 
@@ -222,7 +223,7 @@ export function PropagationDemo({}: PropagationDemoProps) {
             </p>
           ) : (
             <div className="space-y-1">
-              {logs.slice(0, 15).map((log) => (
+              {logs.slice(-15).map((log) => (
                 <div
                   key={log.id}
                   className="flex items-center gap-2 text-xs p-1 rounded bg-muted/50"

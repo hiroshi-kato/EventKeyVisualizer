@@ -5,9 +5,11 @@ import type {
   TimelineEvent,
   ModifierState,
   ShortcutCheckResult,
-  InvalidReason
+  InvalidReason,
+  KeyPressSegment
 } from '@/types/keyboard';
 import { detectPlatform, type Platform } from '@/utils/platform';
+import { applyPressEvent, closeOpenPressSegments } from '@/utils/pressSegment';
 
 const MAX_HISTORY = 20;
 const MAX_TIMELINE = 50;
@@ -16,6 +18,7 @@ export function useKeyboardEvent() {
   const [currentEvent, setCurrentEvent] = useState<KeyboardEventState | null>(null);
   const [history, setHistory] = useState<KeyEventHistory[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [pressSegments, setPressSegments] = useState<KeyPressSegment[]>([]);
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
   const [modifiers, setModifiers] = useState<ModifierState>({
     ctrlKey: false,
@@ -27,6 +30,7 @@ export function useKeyboardEvent() {
 
   const historyIdRef = useRef(0);
   const timelineIdRef = useRef(0);
+  const pressIdRef = useRef(0);
 
   const extractEventState = useCallback((e: KeyboardEvent): KeyboardEventState => {
     return {
@@ -90,7 +94,32 @@ export function useKeyboardEvent() {
       },
       ...prev.slice(0, MAX_TIMELINE - 1),
     ]);
+
+    // Update press segments (keydown -> keyup pairs), oldest first
+    if (e.type === 'keydown') {
+      pressIdRef.current += 1;
+    }
+    // Read the id here: inside the updater it could already point at a later keydown
+    const pressSegmentId = pressIdRef.current;
+    setPressSegments(prev => applyPressEvent(prev, eventState, pressSegmentId));
   }, [extractEventState]);
+
+  // keyup is not delivered when the window loses focus, so reset the held keys
+  useEffect(() => {
+    const handleBlur = () => {
+      setPressedKeys(new Set());
+      setModifiers({
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+      });
+      setPressSegments(prev => closeOpenPressSegments(prev, performance.now()));
+    };
+
+    window.addEventListener('blur', handleBlur);
+    return () => window.removeEventListener('blur', handleBlur);
+  }, []);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyEvent);
@@ -107,8 +136,10 @@ export function useKeyboardEvent() {
   const clearHistory = useCallback(() => {
     setHistory([]);
     setTimeline([]);
+    setPressSegments([]);
     historyIdRef.current = 0;
     timelineIdRef.current = 0;
+    pressIdRef.current = 0;
   }, []);
 
   const getShortcutString = useCallback(() => {
@@ -159,6 +190,7 @@ export function useKeyboardEvent() {
     currentEvent,
     history,
     timeline,
+    pressSegments,
     pressedKeys,
     modifiers,
     currentPlatform,

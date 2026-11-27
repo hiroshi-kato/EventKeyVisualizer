@@ -44,7 +44,8 @@ export function ShortcutDetector({
 
   const codeToKeyName = (code: string): string => {
     // Convert code to key name
-    if (code.startsWith('Key')) return code.slice(3);
+    // 文字キーは COMMON_SHORTCUTS と同じ小文字で扱う (Shift は組み合わせに別途現れる)
+    if (code.startsWith('Key')) return code.slice(3).toLowerCase();
     if (code.startsWith('Digit')) return code.slice(5);
     if (code.startsWith('Arrow')) return code.replace('Arrow', '');
 
